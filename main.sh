@@ -196,7 +196,6 @@ encryptFile(){
     openssl enc -aes-256-cbc -K "$encryptionKey" -iv "$initializationVector" -in "$file" -out "$encryptedFile"
     
     # Append IV to the end of the file
-    # echo "${initializationVector}" | xxd -r -p >> "${encryptedFile}"
     echo "${initializationVector}" | xxd -r -p >> "$temp_file"
     cat "$temp_file" "$encryptedFile" > "$combined_file"
     echo -n "" | dd of="$encryptedFile" bs=1 seek=0 count=0
@@ -457,12 +456,6 @@ getAppCommitBody(){
 EOF
 }
 
-
-# This function is used to upload an iOS LOB Application to the Intune Service
-#
-# Example: 
-# createAndUploadiOSLobApp "package.ipa" "package.ipa" "Publisher Name" "Description of Application" "com.package"  "1" "30" "3.0.0" "2027-02-14T20:53:52Z"
-#  This example uses all parameters required to add an iOS Application into the Intune Service
 createAndUploadAndroidLobApp(){
     local sourceFile="$1"
     local displayName="$2"
