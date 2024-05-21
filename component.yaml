@@ -1,0 +1,41 @@
+platform: Android
+purpose: Publish
+buildPlatform:
+displayName: "Send to Microsoft Intune"
+description: "Upload binary for Microsoft Intune publishing"
+marketPlace: "GooglePlayStore"
+inputs:
+- key: "AC_INTUNE_AUTH_URL"
+  defaultValue: "$AC_INTUNE_AUTH_URL"
+  isRequired: true
+  title: Intune Auth Url
+  description: "Intune Client Auth Url"
+  helpText:
+- key: "AC_INTUNE_CLIENT_ID"
+  defaultValue: "$AC_INTUNE_CLIENT_ID"
+  isRequired: true
+  title: Intune Client Id
+  description: "Intune Client Id"
+  helpText:
+- key: "AC_INTUNE_CLIENT_SECRET"
+  defaultValue: "$AC_INTUNE_CLIENT_SECRET"
+  isRequired: true
+  title: Intune Client Secret
+  description: "Intune Client Secret"
+  helpText:
+- key: "AC_INTUNE_APP_ID"
+  defaultValue: "$AC_INTUNE_APP_ID"
+  isRequired: false
+  title: Intune AppId
+  description: "To update a published application in Microsoft Intune, the application's ID on Microsoft Intune."
+  helpText:
+- key: "AC_INTUNE_PUBLISHER_NAME"
+  defaultValue: "$AC_INTUNE_PUBLISHER_NAME"
+  isRequired: false
+  title: Intune Publisher Name
+  description: "Default will be the name of the organization."
+  helpText:
+processFilename: bash
+processArguments: '%AC_STEP_TEMP%/main.sh'
+files:
+- "main.sh"
