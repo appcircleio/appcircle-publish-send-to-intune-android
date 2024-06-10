@@ -23,9 +23,9 @@ curl -o "./$AndroidFileName" -k $AndroidFileUrl
 ## Get app icon
 curl -o "./$IconFileName" -k $IconUrl
 
-authUrl="$AC_INTUNE_AUTH_URL"
-clientId="$AC_INTUNE_CLIENT_ID"
-clientSecret="$AC_INTUNE_CLIENT_SECRET"
+authUrl="$AC_CREDENTIAL_INTUNE_CLIENT_AUTH_URL"
+clientId="$AC_CREDENTIAL_INTUNE_CLIENT_ID"
+clientSecret="$AC_CREDENTIAL_INTUNE_CLIENT_SECRET"
 inTuneAppId="$AC_INTUNE_APP_ID"
 
 # Variables
