@@ -11,6 +11,24 @@ inputs:
   title: Intune Publisher Name
   description: "Default will be the name of the organization."
   helpText:
+- key: "AC_INTUNE_TARGETED_PLATFORM"
+  defaultValue: "Both"
+  editorType: select
+  optionTitles: "Android device administrator, Android (AOSP)"
+  options: "androidDeviceAdministrator, androidOpenSourceProject"
+  isRequired: true
+  title: Targeted Platform
+  description: "Select the targeted platform."
+  helpText:
+- key: "AC_INTUNE_MIN_OS_VERSION"
+  defaultValue: "v4_0"
+  editorType: select
+  optionTitles: "Android 4.0 (Ice Cream Sandwich), Android 4.0.3 (Ice Cream Sandwich), Android 4.1 (Jelly Bean), Android 4.2 (Jelly Bean), Android 4.3 (Jelly Bean), Android 4.4 (KitKat), Android 5.0 (Lollipop), Android 5.1 (Lollipop), Android 6.0 (Marshmallow), Android 7.0 (Nougat), Android 7.1 (Nougat), Android 8.0 (Oreo), Android 8.1 (Oreo), Android 9.0 (Pie), Android 10.0, Android 11.0"
+  options: "v4_0,v4_0_3,v4_1,v4_2,v4_3,v4_4,v5_0,v5_1,v6_0,v7_0,v7_1,v8_0,v8_1,v9_0,v10_0,v11_0"
+  isRequired: true
+  title: Minimum Operating System
+  description: "Select the earliest operating system version on which the app can be installed. If you assign the app to a device with an earlier operating system, it will not be installed.​"
+  helpText:
 processFilename: bash
 processArguments: '%AC_STEP_TEMP%/main.sh'
 files:

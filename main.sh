@@ -27,11 +27,12 @@ authUrl="$AC_CREDENTIAL_INTUNE_CLIENT_AUTH_URL"
 clientId="$AC_CREDENTIAL_INTUNE_CLIENT_ID"
 clientSecret="$AC_CREDENTIAL_INTUNE_CLIENT_SECRET"
 inTuneAppId="$AC_INTUNE_APP_ID"
+minOsVersion="$AC_INTUNE_MIN_OS_VERSION"
+targetedPlaform="$AC_INTUNE_TARGETED_PLATFORM"
 
 # Variables
 accessToken=""
-baseUrl="https://graph.microsoft.com/v1.0"
-betaUrl="https://graph.microsoft.com/beta"
+baseUrl="https://graph.microsoft.com/beta"
 scope="https://graph.microsoft.com/.default"
 grant_type="client_credentials"
 sleep=10
@@ -100,16 +101,6 @@ getAccessToken(){
 function makeGetRequest(){
     local collectionPath="$1"
     local uri="$baseUrl$collectionPath"
-    local request="GET $uri"
-    contentType="application/json"
-    authorization="Bearer $accessToken"
-    response=$(curl -X GET -H "Content-Type: $contentType" -H "Authorization: $authorization" "$uri" 2>/dev/null)
-    echo "$response"
-}
-
-function getiOSAppList(){
-    local filterString="%24filter=(microsoft.graph.managedApp%2FappAvailability%20eq%20null%20or%20microsoft.graph.managedApp%2FappAvailability%20eq%20%27lineOfBusiness%27%20or%20isAssigned%20eq%20true)"
-    local uri="$betaUrl/deviceAppManagement/mobileApps?$filterString"
     local request="GET $uri"
     contentType="application/json"
     authorization="Bearer $accessToken"
@@ -255,7 +246,7 @@ getAndroidAppBody(){
     "informationUrl": null,
     "isFeatured": false,
     "minimumSupportedOperatingSystem": {
-        "v5_0": true
+        "$minOsVersion": true
     },
     "notes": "",
     "owner": "",
@@ -264,7 +255,7 @@ getAndroidAppBody(){
     largeIcon:$(echo "$iconBody" | jq -c .),
     "publisher": "$publisher",
     "roleScopeTagIds": [],
-    "targetedPlatforms" : "androidDeviceAdministrator",
+    "targetedPlatforms" : "$targetedPlaform",
     "versionCode": "$identityVersion",
     "versionName": "$versionName"
 }
@@ -281,7 +272,7 @@ EOF
     "informationUrl": null,
     "isFeatured": false,
     "minimumSupportedOperatingSystem": {
-        "v5_0": true
+        "$minOsVersion": true
     },
     "notes": "",
     "owner": "",
@@ -289,7 +280,7 @@ EOF
     "privacyInformationUrl": null,
     "publisher": "$publisher",
     "roleScopeTagIds": [],
-    "targetedPlatforms" : "androidDeviceAdministrator",
+    "targetedPlatforms" : "$targetedPlaform",
     "versionCode": "$identityVersion",
     "versionName": "$versionName"
 }
@@ -570,7 +561,10 @@ createAndUploadAndroidLobApp(){
     if [ "$updateApp" = "false" ]; then
         commitAppBody=$(getAppCommitBody "$contentVersionId" "$LOBType")
     else
-        commitAppBody=$(echo "$publishedApp" | jq 'del(.id, .size, .["@odata.context"], .bunleId, .createdDateTime, .identityVersion, .lastModifiedDateTime, .publishingState  )' | jq \
+        minimumSupportedOperatingSystem=$(printf '{
+        "%s": true
+        }' "$minOsVersion")
+        commitAppBody=$(echo "$publishedApp" | jq 'del(.id, .size, .["@odata.context"], .bunleId, .createdDateTime, .identityVersion, .lastModifiedDateTime, .publishingState, .uploadState, .isAssigned, .roleScopeTagIds, .dependentAppCount, .supersedingAppCount, .supersededAppCount, .targetedPlatforms )' | jq \
             --arg LOBType "#$LOBType" \
             --arg contentVersionId "$contentVersionId" \
             --arg displayName "$displayName" \
@@ -579,6 +573,7 @@ createAndUploadAndroidLobApp(){
             --arg versionCode "$identityVersion" \
             --arg versionName "$versionName" \
             --arg publisher "$publisher" \
+            --argjson minimumSupportedOperatingSystem "$minimumSupportedOperatingSystem" \
             '
             .["@odata.type"] = $LOBType |
             .committedContentVersion = $contentVersionId |
@@ -587,7 +582,8 @@ createAndUploadAndroidLobApp(){
             .fileName = $filename |
             .versionCode = $versionCode |
             .publisher = $publisher |
-            .versionName = $versionName
+            .versionName = $versionName |
+            .minimumSupportedOperatingSystem = $minimumSupportedOperatingSystem
             ')
     fi
     response=$(makePatchRequest "$commitAppUri" "$commitAppBody")
