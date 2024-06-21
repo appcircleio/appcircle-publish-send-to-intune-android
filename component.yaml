@@ -12,7 +12,7 @@ inputs:
   description: "Default will be the name of the organization."
   helpText:
 - key: "AC_INTUNE_TARGETED_PLATFORM"
-  defaultValue: "Both"
+  defaultValue: "androidOpenSourceProject"
   editorType: select
   optionTitles: "Android device administrator, Android (AOSP)"
   options: "androidDeviceAdministrator, androidOpenSourceProject"
