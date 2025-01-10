@@ -18,7 +18,7 @@ echo "ACOutputDir:$AC_OUTPUT_DIR"
 
 locale
 ## Get app binary
-curl -o "./$AC_APP_FILE_NAME" -k $AC_APP_FILE_URL
+curl -o "./$AC_APP_FILE_NAME" -k "$AC_APP_FILE_URL"
 
 ## Get app icon
 curl -o "./$AC_APP_ICON_FILE_NAME" -k $AC_APP_ICON_URL
