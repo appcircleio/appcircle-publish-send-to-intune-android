@@ -328,7 +328,7 @@ waitForFileProcessing(){
     local fileUri="$1"
     local stage="$2"
 
-    local attempts=60
+    local attempts=600
     local waitTimeInSeconds=1
 
     local successState="${stage}Success"
@@ -410,7 +410,18 @@ uploadFileToAzureStorage(){
     local sasUri="$1"
     local filepath="$2"
 
-    split -b 1M "$filepath" "block-"
+    local filesize
+    filesize=$(stat -f%z "$filepath")
+
+    local max_chunks=100
+
+    local min_chunk_size=$((100 * 1024 * 1024))
+
+    local calc_chunk_size=$(( (filesize + max_chunks - 1) / max_chunks ))
+
+    local chunk_size=$(( calc_chunk_size > min_chunk_size ? calc_chunk_size : min_chunk_size ))
+
+    split -b "$chunk_size" "$filepath" "block-"
     block_parts=($(ls block-*))
     block_size=${#block_parts[@]}
     # Upload each chunk
