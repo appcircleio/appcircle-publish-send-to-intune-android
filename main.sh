@@ -176,31 +176,50 @@ generateIV(){
 encryptFile(){
     local source_file="$1"
     local target_file="$2"
-    
     encryptionKey=$(generateKey)
     initializationVector=$(generateIV)
     hmacKey=$(generateKey)
+    combined_file=$(mktemp combined_file.bin)
+    temp_file=$(mktemp tmp.bin)
+    # Encrypt the .ipa file using AES-256-CBC
+    file="$source_file"
+    encryptedFile="$target_file"
+    openssl enc -aes-256-cbc -K "$encryptionKey" -iv "$initializationVector" -in "$file" -out "$encryptedFile"
     
-    # Sadece AES-256-CBC ile dosyayı şifrele. Yüklenecek olan saf dosya budur.
-    openssl enc -aes-256-cbc -K "$encryptionKey" -iv "$initializationVector" -in "$source_file" -out "$target_file"
+    # Append IV to the end of the file
+    echo "${initializationVector}" | xxd -r -p >> "$temp_file"
+    cat "$temp_file" "$encryptedFile" > "$combined_file"
+    echo -n "" | dd of="$encryptedFile" bs=1 seek=0 count=0
+    cat "$combined_file" > "$encryptedFile"
+    echo -n "" | dd of="$combined_file" bs=1 seek=0 count=0
+    echo -n "" | dd of="$temp_file" bs=1 seek=0 count=0
     
-    # HMAC-SHA256'yı doğrudan bu saf şifrelenmiş dosya üzerinden hesapla
-    mac=$(cat "${target_file}" | openssl dgst -sha256 -mac hmac -macopt hexkey:"${hmacKey}" | awk '{print $NF}')
-    
-    # Key ve Vektörleri Base64 formatına çevir
-    encryptionKeyBase64=$(echo -n "$encryptionKey" | xxd -r -p | base64)
-    initializationVectorBase64=$(echo -n "$initializationVector" | xxd -r -p | base64)
-    hmacKeyBase64=$(echo -n "$hmacKey" | xxd -r -p | base64)
-    macBase64=$(echo -n "$mac" | xxd -r -p | base64)
-    
-    # Orijinal (şifrelenmemiş) dosyanın SHA256 özetini hesapla
-    fileDigest=$(openssl dgst -sha256 -binary "$source_file" | base64)
+    # Calculate and append HMAC
+    # shellcheck disable=SC2094,SC2002
+    mac=$(cat "${encryptedFile}" | openssl dgst -sha256 -mac hmac -macopt hexkey:"${hmacKey}" | awk '{print $NF}')
+    echo "${mac}" | xxd -r -p >> "$temp_file"
+    cat "$temp_file" "$encryptedFile" > "$combined_file"
+    echo -n "" | dd of="$encryptedFile" bs=1 seek=0 count=0
+    cat "$combined_file" > "$encryptedFile"
+    echo -n "" | dd of="$combined_file" bs=1 seek=0 count=0
+    echo -n "" | dd of="$temp_file" bs=1 seek=0 count=0
 
-    # Intune'un beklediği JSON formatını oluştur
+    # Encode keys and vectors in base64
+    encryptionKeyBase64=$(echo -n $encryptionKey | xxd -r -p | base64 )
+    initializationVectorBase64=$(echo -n $initializationVector | xxd -r -p | base64 )
+    hmacKeyBase64=$(echo -n $hmacKey | xxd -r -p | base64 )
+    macBase64=$(echo -n $mac | xxd -r -p | base64 )
+    
+    # Compute the SHA256 hash (file digest) of the original .ipa file
+    fileDigest=$(openssl dgst -sha256 -binary "$file" | base64)
+
     encryptionInfo=$(printf '{"fileEncryptionInfo":{"encryptionKey":"%s","macKey":"%s","initializationVector":"%s","mac":"%s","profileIdentifier":"ProfileVersion1","fileDigest":"%s","fileDigestAlgorithm":"SHA256"}} \n' \
     "$encryptionKeyBase64" "$hmacKeyBase64" "$initializationVectorBase64" "$macBase64" "$fileDigest" | jq -c .)
     
-    echo "$encryptionInfo"
+    rm "$combined_file"
+    rm "$temp_file"
+
+    echo "$encryptionInfo";
 }
 
 
