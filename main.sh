@@ -545,6 +545,8 @@ createAndUploadAndroidLobApp(){
     fi
 
     printInfo "Waiting for the file entry URI to be created..."
+	echo "$file" >&2
+	
     fileId=$(echo "$file" | jq -r '.id')
     fileUri="/deviceAppManagement/mobileApps/$appId/$LOBType/contentVersions/$contentVersionId/files/$fileId"
     file=$(waitForFileProcessing "$fileUri" "azureStorageUriRequest")
