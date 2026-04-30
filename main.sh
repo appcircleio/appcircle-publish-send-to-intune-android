@@ -15,6 +15,7 @@ echo "IconFileName:$AC_APP_ICON_FILE_NAME"
 echo "IconUrl:$AC_APP_ICON_URL"
 echo "ACOutputDir:$AC_OUTPUT_DIR"
 
+printenv
 
 locale
 ## Get app binary
