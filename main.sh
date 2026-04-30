@@ -340,6 +340,8 @@ waitForFileProcessing(){
 
     while [ "$attempts" -gt 0 ]; do
         file=$(makeGetRequest "$fileUri")
+		echo "$file" >&2
+		printError "$file"
         uploadState=$(echo "$file" | jq -r '.uploadState')
         if [ "${uploadState}" = "$successState" ]; then
             break
