@@ -293,13 +293,13 @@ generateAndroidManifest() {
     local bundleId="$2"
     local identityVersion="$3"
     local versionName="$4"
-    manifestXML='<?xml version="1.0" encoding="utf-8"?><AndroidManifestProperties xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><Package>bundleid</Package><PackageVersionCode>bundleversion</PackageVersionCode><PackageVersionName>bundleversionname</PackageVersionName><ApplicationName>bundletitle</ApplicationName><MinSdkVersion>21</MinSdkVersion><AWTVersion></AWTVersion></AndroidManifestProperties>'
+    manifestXML='<?xml version="1.0" encoding="utf-8"?><AndroidManifestProperties xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><Package>bundleid</Package><PackageVersionCode>__VERSION_CODE__</PackageVersionCode><PackageVersionName>__VERSION_NAME__</PackageVersionName><ApplicationName>bundletitle</ApplicationName><MinSdkVersion>21</MinSdkVersion><AWTVersion></AWTVersion></AndroidManifestProperties>'
 
     # Replace placeholders with actual values
     manifestXML="${manifestXML//bundleid/$bundleId}"
-    manifestXML="${manifestXML//bundleversion/$identityVersion}"
+    manifestXML="${manifestXML//__VERSION_CODE__/$identityVersion}"
     manifestXML="${manifestXML//bundletitle/$displayName}"
-    manifestXML="${manifestXML//bundleversionname/$versionName}"
+    manifestXML="${manifestXML//__VERSION_NAME__/$versionName}"
 
     # Convert the manifest XML to ASCII bytes and then to Base64
     encodedText=$(echo "$manifestXML" | base64)
