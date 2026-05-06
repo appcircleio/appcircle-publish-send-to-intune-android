@@ -288,21 +288,51 @@ EOF
    fi
 }
 
+getMinSdkVersionFromApk() {
+    local apkPath="$1"
+    
+    local aapt_cmd="aapt"
+    
+    if ! command -v aapt &> /dev/null; then
+        if [ -n "$ANDROID_HOME" ]; then
+            aapt_cmd=$(find "$ANDROID_HOME/build-tools" -name "aapt" | sort -r | head -n 1)
+        else
+            printError "aapt not found or not defined on ANDROID_HOME. Min SDK cannot be read."
+            exit 1
+        fi
+    fi
+
+    local minSdk
+    minSdk=$("$aapt_cmd" dump badging "$apkPath" | grep "sdkVersion:" | awk -F"'" '{print $2}')
+    
+    if [ -z "$minSdk" ]; then
+        printError "minSdkVersion can not be read from APK file"
+        exit 1
+    fi
+    
+    echo "$minSdk"
+}
+
 generateAndroidManifest() {
     local displayName="$1"
     local bundleId="$2"
     local identityVersion="$3"
     local versionName="$4"
-    manifestXML='<?xml version="1.0" encoding="utf-8"?><AndroidManifestProperties xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><Package>bundleid</Package><PackageVersionCode>__VERSION_CODE__</PackageVersionCode><PackageVersionName>__VERSION_NAME__</PackageVersionName><ApplicationName>bundletitle</ApplicationName><MinSdkVersion>21</MinSdkVersion><AWTVersion></AWTVersion></AndroidManifestProperties>'
+    local apkFileName="$AC_APP_FILE_NAME" 
+    local apkPath="./$AC_APP_FILE_NAME"
+    
+    local minSdk=$(getMinSdkVersionFromApk "$apkPath")
+    printInfo "minSdkVersion: $minSdk" >&2
+    
+    manifestXML='<?xml version="1.0" encoding="utf-8"?><AndroidManifestProperties xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><Package>bundleid</Package><PackageVersionCode>__VERSION_CODE__</PackageVersionCode><PackageVersionName>__VERSION_NAME__</PackageVersionName><ApplicationName>bundletitle</ApplicationName><MinSdkVersion>minsdkversion_placeholder</MinSdkVersion><AWTVersion></AWTVersion></AndroidManifestProperties>'
 
-    # Replace placeholders with actual values
     manifestXML="${manifestXML//bundleid/$bundleId}"
     manifestXML="${manifestXML//__VERSION_CODE__/$identityVersion}"
-    manifestXML="${manifestXML//bundletitle/$displayName}"
     manifestXML="${manifestXML//__VERSION_NAME__/$versionName}"
+    manifestXML="${manifestXML//bundletitle/$apkFileName}" 
+    manifestXML="${manifestXML//minsdkversion_placeholder/$minSdk}"
 
-    # Convert the manifest XML to ASCII bytes and then to Base64
-    encodedText=$(echo "$manifestXML" | base64)
+    encodedText=$(echo -n "$manifestXML" | base64)
 
     echo "$encodedText" 
 }
