@@ -3,7 +3,7 @@
 # install jq to use this script
 # Obtain these values before the component starts. (from env, etc..)
 
-brew install jq
+command -v jq >/dev/null 2>&1 || brew install jq
 
 echo "AndroidFileName:$AC_APP_FILE_NAME"
 echo "AndroidFileUrl:$AC_APP_FILE_URL"
