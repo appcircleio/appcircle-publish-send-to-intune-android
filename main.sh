@@ -3,7 +3,19 @@
 # install jq to use this script
 # Obtain these values before the component starts. (from env, etc..)
 
-command -v jq >/dev/null 2>&1 || brew install jq
+if ! command -v jq >/dev/null 2>&1; then
+    if [ "$(uname -s)" = "Darwin" ] && command -v brew >/dev/null 2>&1; then
+        brew install jq
+    else
+        echo "jq is required but was not found on this runner. Install jq and run the step again." >&2
+        exit 1
+    fi
+fi
+
+# File size in bytes. wc -c works on macOS and Linux; macOS pads the number with spaces.
+fileSize() {
+    wc -c < "$1" | tr -d ' '
+}
 
 echo "AndroidFileName:$AC_APP_FILE_NAME"
 echo "AndroidFileUrl:$AC_APP_FILE_URL"
@@ -441,7 +453,7 @@ uploadFileToAzureStorage(){
     local filepath="$2"
 
     local filesize
-    filesize=$(stat -f%z "$filepath")
+    filesize=$(fileSize "$filepath")
 
     local max_chunks=100
 
@@ -551,9 +563,9 @@ createAndUploadAndroidLobApp(){
 
     encryptionInfo=$(encryptFile "$sourceFile" "$temp_file")
     # Get the size of the source file
-    size=$(stat -f %z "$sourceFile")
+    size=$(fileSize "$sourceFile")
     # Get the size of the temporary file (assuming it's the encrypted file)
-    encryptedSize=$(stat -f %z "$temp_file")
+    encryptedSize=$(fileSize "$temp_file")
 
     printInfo "Creating the manifest file used to install the application on the device..."
     
